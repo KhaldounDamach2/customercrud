@@ -53,18 +53,40 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  # Deployment ready notification
+  # Deployment ready notification and signal
   notify:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     
     steps:
+    - uses: actions/checkout@v4
+    
+    - name: Create deployment signal
+      run: |
+        # Create deployment marker with timestamp and commit info
+        echo "{
+          \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+          \"commit\": \"${{ github.sha }}\",
+          \"status\": \"ready\",
+          \"message\": \"Build and tests passed successfully\"
+        }" > deployment-signal.json
+        
+    - name: Upload deployment signal
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-signal
+        path: deployment-signal.json
+        retention-days: 7
+    
     - name: Deployment ready notification
       run: |
-        echo "✅ Docker image built and tested successfully!"
-        echo "🚀 Application ready for deployment"
-        echo "📋 To deploy on your server, run:"
-        echo "   cd /opt/customercrud"
-        echo "   git pull origin main"
-        echo "   docker-compose up -d --build"
+        echo "🎉 DEPLOYMENT READY!"
+        echo "✅ Build: SUCCESS"
+        echo "✅ Tests: PASSED" 
+        echo "✅ Docker: BUILT"
+        echo "📦 Commit: ${{ github.sha }}"
+        echo "🕐 Time: $(date -u)"
+        echo ""
+        echo "🤖 Auto-deployment will trigger within 5 minutes if enabled on server"
+        echo "📌 Manual deployment: cd /opt/customercrud && ./deploy.sh"

@@ -1,0 +1,14 @@
+[Unit]
+Description=CustomerCRUD Auto-Deployment Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/customercrud
+ExecStart=/opt/customercrud/auto-deploy.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

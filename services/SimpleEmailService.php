@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../vendor/autoload.php';  // Fixed path
 
 use SendGrid\Mail\Mail;
-use SendGrid;
 
 class SimpleEmailService {
     private $sendGrid;
@@ -12,12 +11,14 @@ class SimpleEmailService {
         if (empty($apiKey)) {
             throw new Exception('SendGrid API key not found. Please set SENDGRID_API_KEY environment variable.');
         }
-        $this->sendGrid = new SendGrid($apiKey);
+        $this->sendGrid = new \SendGrid($apiKey);
     }
 
     public function sendWelcomeEmail($toEmail, $customerName) {
         $email = new Mail();
-        $email->setFrom("damach.k@gmx.de", "Mario's Pizza Palace");
+        $fromEmail = $_ENV['SENDGRID_FROM_EMAIL'] ?? 'noreply@example.com';
+        $fromName = $_ENV['SENDGRID_FROM_NAME'] ?? 'Customer Service';
+        $email->setFrom($fromEmail, $fromName);
         $email->setSubject("Welcome to Our Service!");
         $email->addTo($toEmail, $customerName);
         

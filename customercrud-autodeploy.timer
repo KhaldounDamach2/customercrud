@@ -1,0 +1,11 @@
+[Unit]
+Description=Run CustomerCRUD Auto-Deployment every 5 minutes
+Requires=customercrud-autodeploy.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
