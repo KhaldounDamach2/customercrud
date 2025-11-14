@@ -45,15 +45,23 @@ check_workflow_status() {
     # Get the latest workflow run for this commit
     local api_response=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?head_sha=$commit_sha&status=completed&per_page=1")
     
-    # Debug: log the API response (first 200 chars)
+    # Debug: log the API response (first 200 chars) to separate log line
     log "🐛 DEBUG: API Response: $(echo "$api_response" | cut -c1-200)..."
+    
+    # Check if we have any workflow runs
+    local total_count=$(echo "$api_response" | grep -o '"total_count": *[0-9]*' | sed 's/.*: *\([0-9]*\).*/\1/')
+    
+    if [ "$total_count" = "0" ] || [ -z "$total_count" ]; then
+        echo "not_found"
+        return
+    fi
     
     # Extract conclusion from the response
     local status=$(echo "$api_response" | grep -o '"conclusion": *"[^"]*"' | head -1 | sed 's/.*"conclusion": *"\([^"]*\)".*/\1/')
     
     # If no conclusion found, check if workflow is still running
     if [ -z "$status" ]; then
-        local running_status=$(echo "$api_response" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+        local running_status=$(echo "$api_response" | grep -o '"status": *"[^"]*"' | head -1 | sed 's/.*"status": *"\([^"]*\)".*/\1/')
         if [ "$running_status" = "in_progress" ] || [ "$running_status" = "queued" ]; then
             echo "running"
         else
