@@ -39,10 +39,30 @@ docker-compose pull
 
 # Build and start containers
 echo -e "${BLUE}🏗️  Building and starting containers...${NC}"
-docker-compose up -d --build
+echo -e "${YELLOW}⏳ This may take a moment for database initialization...${NC}"
 
-# Wait a moment for containers to start
-sleep 5
+# Start with longer timeout
+timeout 300 docker-compose up -d --build
+
+if [ $? -eq 124 ]; then
+    echo -e "${RED}❌ Deployment timed out after 5 minutes${NC}"
+    echo -e "${BLUE}💡 Try: docker-compose down && docker-compose up -d --build${NC}"
+    exit 1
+fi
+
+# Wait for services to be ready
+echo -e "${BLUE}⏳ Waiting for services to become ready...${NC}"
+sleep 10
+
+# Wait for database to be healthy (up to 2 minutes)
+for i in {1..24}; do
+    if docker-compose ps | grep -q "customercrud-db-1.*healthy"; then
+        echo -e "${GREEN}✅ Database is healthy${NC}"
+        break
+    fi
+    echo -e "${YELLOW}⏳ Waiting for database... (${i}/24)${NC}"
+    sleep 5
+done
 
 # Check container status
 echo -e "${BLUE}📋 Checking container status...${NC}"
