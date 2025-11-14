@@ -41,9 +41,27 @@ get_latest_commit() {
 # Function to check if workflow passed for a specific commit
 check_workflow_status() {
     local commit_sha=$1
-    local status=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?head_sha=$commit_sha&status=completed" | \
-    grep -o '"conclusion":"[^"]*"' | head -1 | cut -d'"' -f4)
-    echo "$status"
+    
+    # Get the latest workflow run for this commit
+    local api_response=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?head_sha=$commit_sha&status=completed&per_page=1")
+    
+    # Debug: log the API response (first 200 chars)
+    log "🐛 DEBUG: API Response: $(echo "$api_response" | cut -c1-200)..."
+    
+    # Extract conclusion from the response
+    local status=$(echo "$api_response" | grep -o '"conclusion":"[^"]*"' | head -1 | cut -d'"' -f4)
+    
+    # If no conclusion found, check if workflow is still running
+    if [ -z "$status" ]; then
+        local running_status=$(echo "$api_response" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+        if [ "$running_status" = "in_progress" ] || [ "$running_status" = "queued" ]; then
+            echo "running"
+        else
+            echo "not_found"
+        fi
+    else
+        echo "$status"
+    fi
 }
 
 # Function to get last deployed commit
@@ -86,11 +104,27 @@ main() {
     log "${BLUE}🔍 Checking CI/CD pipeline status...${NC}"
     workflow_status=$(check_workflow_status "$latest_commit")
     
-    if [ "$workflow_status" != "success" ]; then
-        log "${RED}❌ Pipeline not successful for commit $(echo $latest_commit | cut -c1-8) (status: $workflow_status)${NC}"
-        log "${YELLOW}⏳ Waiting for pipeline to complete or fix issues...${NC}"
-        return 1
-    fi
+    case "$workflow_status" in
+        "success")
+            log "${GREEN}✅ Pipeline passed! Starting deployment...${NC}"
+            ;;
+        "running"|"in_progress"|"queued")
+            log "${YELLOW}⏳ Pipeline is still running for commit $(echo $latest_commit | cut -c1-8)${NC}"
+            return 0
+            ;;
+        "failure"|"cancelled"|"timed_out")
+            log "${RED}❌ Pipeline failed for commit $(echo $latest_commit | cut -c1-8) (status: $workflow_status)${NC}"
+            return 1
+            ;;
+        "not_found"|"")
+            log "${YELLOW}🔍 No pipeline found yet for commit $(echo $latest_commit | cut -c1-8), waiting...${NC}"
+            return 0
+            ;;
+        *)
+            log "${YELLOW}❓ Unknown pipeline status: $workflow_status for commit $(echo $latest_commit | cut -c1-8)${NC}"
+            return 1
+            ;;
+    esac
     
     log "${GREEN}✅ Pipeline passed! Starting deployment...${NC}"
     
