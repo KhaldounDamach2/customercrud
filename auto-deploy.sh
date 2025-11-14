@@ -46,7 +46,8 @@ check_workflow_status() {
     local api_response=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/runs?head_sha=$commit_sha&status=completed&per_page=1")
     
     # Debug: log the API response (first 200 chars) to separate log line
-    log "🐛 DEBUG: API Response: $(echo "$api_response" | cut -c1-200)..."
+    # Temporarily disable debug output that's interfering with parsing
+    # log "🐛 DEBUG: API Response: $(echo "$api_response" | cut -c1-200)..."
     
     # Check if we have any workflow runs
     local total_count=$(echo "$api_response" | grep -o '"total_count": *[0-9]*' | sed 's/.*: *\([0-9]*\).*/\1/')
