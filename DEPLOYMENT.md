@@ -25,7 +25,7 @@ cp .env.example .env
 docker-compose up -d
 
 # 4. Open in browser
-# http://localhost:8080
+# http://localhost:8081
 ```
 
 **That's it! The application will run with a MySQL database included.**
@@ -114,7 +114,7 @@ docker-compose up -d --build
 
 ## 🌐 Production URLs
 
-- **Application**: `http://your-server-ip:8080`
+- **Application**: `http://your-server-ip:8081`
 - **Database**: `your-server-ip:3307` (if needed)
 
 ## 🛡️ Security Notes
