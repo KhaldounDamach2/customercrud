@@ -137,19 +137,45 @@ main() {
     
     log "${GREEN}✅ Pipeline passed! Starting deployment...${NC}"
     
-    # Run deployment
+    # Run deployment with proper error handling
     log "${BLUE}🚀 Executing deployment script...${NC}"
     
-    if ./deploy.sh >> "$LOG_FILE" 2>&1; then
+    # Stop any existing containers gracefully before deployment
+    docker-compose down >> "$LOG_FILE" 2>&1 || true
+    
+    # Run deployment and capture both success and failure logs
+    if timeout 600 bash -c './deploy.sh' >> "$LOG_FILE" 2>&1; then
         save_deployed_commit "$latest_commit"
         log "${GREEN}🎉 Deployment successful! Commit $(echo $latest_commit | cut -c1-8) deployed${NC}"
         
-        # Send deployment notification (optional)
-        log "${BLUE}📧 Deployment completed at $(date)${NC}"
-        
-        return 0
+        # Verify containers are actually running
+        if docker-compose ps | grep -q "Up"; then
+            log "${GREEN}✅ Containers verified running successfully${NC}"
+            log "${BLUE}📧 Deployment completed at $(date)${NC}"
+            return 0
+        else
+            log "${RED}❌ Deployment completed but containers not running properly${NC}"
+            # Try to restart the previous version
+            docker-compose up -d >> "$LOG_FILE" 2>&1 || true
+            return 1
+        fi
     else
-        log "${RED}❌ Deployment failed! Check deploy.sh logs${NC}"
+        log "${RED}❌ Deployment failed! Attempting to restore service...${NC}"
+        
+        # Log the last few lines of the deployment for debugging
+        log "${YELLOW}📋 Last deployment output:${NC}"
+        tail -10 "$LOG_FILE" | while read line; do
+            log "${YELLOW}   $line${NC}"
+        done
+        
+        # Try to restart containers to restore service
+        log "${BLUE}🔄 Attempting to restore application...${NC}"
+        if docker-compose up -d >> "$LOG_FILE" 2>&1; then
+            log "${GREEN}✅ Application restored successfully${NC}"
+        else
+            log "${RED}❌ Failed to restore application - manual intervention required${NC}"
+        fi
+        
         return 1
     fi
 }
