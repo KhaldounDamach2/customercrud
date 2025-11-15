@@ -2,6 +2,8 @@
 
 This system provides **automatic deployment** for the CustomerCRUD application, triggered by successful GitHub Actions CI/CD pipeline runs.
 
+> **📖 See also:** [DEPLOYMENT.md](DEPLOYMENT.md) for general deployment options | [README.md](README.md) for project overview
+
 ## 🎯 How It Works
 
 ```
@@ -37,16 +39,34 @@ tail -f /opt/customercrud/auto-deploy.log
 
 ## 🔧 Management Commands
 
+### Status Monitoring
 ```bash
-# Status and logs
+# Check timer status
 systemctl status customercrud-autodeploy.timer
+
+# View real-time logs
 journalctl -u customercrud-autodeploy.service -f
+
+# View deployment history  
 tail -f /opt/customercrud/auto-deploy.log
 
-# Control
-sudo systemctl start customercrud-autodeploy.timer   # Enable auto-deploy
-sudo systemctl stop customercrud-autodeploy.timer    # Disable auto-deploy
-sudo systemctl start customercrud-autodeploy.service # Manual deployment
+# See next scheduled run
+systemctl list-timers customercrud-autodeploy.timer
+```
+
+### Service Control
+```bash
+# Enable auto-deployment
+sudo systemctl start customercrud-autodeploy.timer
+
+# Disable auto-deployment
+sudo systemctl stop customercrud-autodeploy.timer
+
+# Manual deployment trigger (test)
+sudo systemctl start customercrud-autodeploy.service
+
+# Restart service after config changes
+sudo systemctl restart customercrud-autodeploy.timer
 ```
 
 ## 🛡️ Safety Features
@@ -64,3 +84,34 @@ sudo systemctl start customercrud-autodeploy.service # Manual deployment
 - **Safe and reliable** - Only successful changes go live
 - **Fast feedback loop** - 5-minute deployment window
 - **Production ready** - Systemd service management
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Service not running:**
+```bash
+sudo systemctl status customercrud-autodeploy.timer
+sudo journalctl -u customercrud-autodeploy.service --since "1 hour ago"
+```
+
+**Deployment not triggering:**
+```bash
+# Check if CI/CD pipeline passed
+# View GitHub Actions in your repository
+
+# Check auto-deploy logs
+tail -n 20 /opt/customercrud/auto-deploy.log
+```
+
+**Permission issues:**
+```bash
+# Fix file permissions
+sudo chown -R $USER:$USER /opt/customercrud
+chmod +x /opt/customercrud/auto-deploy.sh
+```
+
+### Log Analysis
+- ✅ `Already up to date` = Working correctly, no new commits
+- ✅ `Deploying commit` = New deployment in progress  
+- ❌ `Error:` = Check GitHub API limits or network issues

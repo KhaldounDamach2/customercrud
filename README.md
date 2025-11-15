@@ -9,6 +9,7 @@ A modern PHP-based Customer Management System with email notifications, built wi
 - **Dockerized**: Production-ready containerization
 - **Secure**: Environment-based configuration, no secrets in code
 - **Responsive**: Bootstrap-powered UI
+- **Auto-Deployment**: Professional CI/CD with GitHub Actions
 
 ## 📋 Prerequisites
 
@@ -52,7 +53,7 @@ docker-compose ps
 ```
 
 ### 5. Access the application
-- **Web Application**: http://localhost:8080
+- **Web Application**: http://localhost:8081
 - **Database**: localhost:3307 (if needed)
 
 ## 🏗️ Architecture
@@ -103,18 +104,14 @@ docker-compose down -v
 
 ## 🚀 Deployment
 
-### GitHub Actions CI/CD
-This project includes automated deployment via GitHub Actions:
+For production deployment options, see:
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete production setup guide
+- **[AUTO-DEPLOY-README.md](AUTO-DEPLOY-README.md)** - Automated deployment system
 
-1. **Push to main** triggers the workflow
-2. **Docker image** is built and pushed to registry
-3. **Deployment** to production server (configure secrets)
-
-### Manual Deployment
+### Quick Local Test
 ```bash
-# On your server
-git pull origin main
-docker-compose up -d --build
+docker-compose up -d
+# Visit http://localhost:8081
 ```
 
 ## 🔒 Security Features
@@ -187,10 +184,15 @@ docker-compose exec db mysqladmin ping -h localhost
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
+## 📚 Documentation
+
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment guide
+- **[AUTO-DEPLOY-README.md](AUTO-DEPLOY-README.md)** - Automated deployment system
+
 ## 📄 License
 
 This project is licensed under the MIT License.
 
 ## 🆘 Support
 
-For support, email your-email@domain.com or create an issue on GitHub.
+For support, create an issue on GitHub or check the documentation above.
