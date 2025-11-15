@@ -21,7 +21,7 @@ $stmt = $customer->read();
     <div class="container mt-5">
         <div class="row">
             <div class="col-12">
-                <h1 class="text-center mb-4">KH-Customer Management</h1>
+                <h1 class="text-center mb-4">K-Customer Management</h1>
                 
                 <!-- Success Message -->
                 <?php if (isset($_SESSION['success_message'])): ?>
