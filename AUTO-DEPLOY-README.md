@@ -14,10 +14,10 @@ Developer Push → GitHub Actions → Tests Pass → Auto-Deploy (every 5min) �
 
 ## 🚀 Quick Setup
 
-**1. On your Ubuntu server:**
+**1. On your Ubuntu server (ONE-TIME ONLY):**
 ```bash
 cd /opt/customercrud
-sudo ./setup-auto-deploy.sh
+sudo ./setup-auto-deploy.sh  # Only run this ONCE - survives reboots!
 ```
 
 **2. Push code to GitHub:**
@@ -84,6 +84,7 @@ sudo systemctl restart customercrud-autodeploy.timer
 - **Safe and reliable** - Only successful changes go live
 - **Fast feedback loop** - 5-minute deployment window
 - **Production ready** - Systemd service management
+- **Survives reboots** - Auto-starts after server restarts (no re-setup needed)
 
 ## 🐛 Troubleshooting
 
